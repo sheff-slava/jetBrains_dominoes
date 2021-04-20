@@ -38,17 +38,20 @@ random.seed()
 
 first_player, domino_snake = distribute()
 
-print('Stock pieces:', stock)
+print('======================================================================')
+print('Stock size:', len(stock))
+print(f'Computer pieces: {len(computer)}\n')
+print(domino_snake, '\n')
 
 if first_player == 0:
     computer.remove(domino_snake)
-    print('Computer pieces:', computer)
-    print('Player pieces:', player)
-    print('Domino snake:', [domino_snake])
-    print('Status: player')
+    print('Your pieces:')
+    for index, domino in enumerate(player):
+        print(f'{index + 1}:{domino}')
+    print("\nStatus: It's your turn to make a move. Enter your command.")
 else:
     player.remove(domino_snake)
-    print('Computer pieces:', computer)
-    print('Player pieces:', player)
-    print('Domino snake:', [domino_snake])
-    print('Status: computer')
+    print('Your pieces:')
+    for index, domino in enumerate(player):
+        print(f'{index + 1}:{domino}')
+    print("\nStatus: Computer is about to make a move. Press Enter to continue...")
