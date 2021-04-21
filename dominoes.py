@@ -1,3 +1,4 @@
+from itertools import chain
 import random
 
 
@@ -141,6 +142,24 @@ def handle_move(move):
         return error_code
 
 
+def computer_turn():
+    count_nums = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
+    for num in chain(computer, domino_snake):
+        count_nums[num[0]] += 1
+        count_nums[num[1]] += 1
+    scores = list()
+    for index, domino in enumerate(computer):
+        scores.append((count_nums[domino[0]] + count_nums[domino[1]], index, domino))
+    scores.sort(key=lambda x: x[0], reverse=True)
+    scores = [(x[1], x[2]) for x in scores]
+    for i, turn in scores:
+        if domino_snake[-1][-1] in turn:
+            return i + 1
+        if domino_snake[0][0] in turn:
+            return -(i + 1)
+    return 0
+
+
 random.seed()
 move_num, domino_snake = distribute()
 
@@ -163,7 +182,6 @@ while not end_game_condition():
             code = handle_move(input())
     else:
         input()
-        code = handle_move(random.randint(-len(computer), len(computer)))
-        while code == -2:
-            code = handle_move(random.randint(-len(computer), len(computer)))
+        code = computer_turn()
+        handle_move(code)
     move_num = (move_num + 1) % 2
