@@ -24,34 +24,112 @@ def distribute():
                  [2, 3], [2, 4], [2, 5], [2, 6], [3, 3], [3, 4], [3, 5],
                  [3, 6], [4, 4], [4, 5], [4, 6], [5, 5], [5, 6], [6, 6]]
         for _ in range(7):
-            domino = random.choice(stock)
-            computer.append(domino)
-            stock.remove(domino)
-            domino = random.choice(stock)
-            player.append(domino)
-            stock.remove(domino)
+            random_domino = random.choice(stock)
+            computer.append(random_domino)
+            stock.remove(random_domino)
+            random_domino = random.choice(stock)
+            player.append(random_domino)
+            stock.remove(random_domino)
         code = determine_first(computer, player)
     return code
 
 
-random.seed()
-
-first_player, domino_snake = distribute()
-
-print('======================================================================')
-print('Stock size:', len(stock))
-print(f'Computer pieces: {len(computer)}\n')
-print(domino_snake, '\n')
-
-if first_player == 0:
-    computer.remove(domino_snake)
+def end_game_condition():
+    print('======================================================================')
+    print('Stock size:', len(stock))
+    print(f'Computer pieces: {len(computer)}\n')
+    if len(domino_snake) < 7:
+        print(*domino_snake, '\n', sep='')
+    else:
+        print(str(domino_snake[0]), str(domino_snake[1]), str(domino_snake[2]), '...',
+              str(domino_snake[-3]), str(domino_snake[-2]), str(domino_snake[-1]), '\n', sep='')
     print('Your pieces:')
     for index, domino in enumerate(player):
         print(f'{index + 1}:{domino}')
-    print("\nStatus: It's your turn to make a move. Enter your command.")
+
+    if len(computer) == 0:
+        print("\nStatus: The game is over. The computer won!")
+        return True
+    elif len(player) == 0:
+        print("\nStatus: The game is over. You won!")
+        return True
+    elif domino_snake[0][0] == domino_snake[-1][-1]:
+        first_digit = domino_snake[0][0]
+        digit_counter = 0
+        for snake in domino_snake:
+            if first_digit in snake:
+                digit_counter += 1
+        if digit_counter == 7:
+            print("\nStatus: The game is over. It's a draw!")
+            return True
+    if move_num == 0:
+        print("\nStatus: Computer is about to make a move. Press Enter to continue...")
+    else:
+        print("\nStatus: It's your turn to make a move. Enter your command.")
+    return False
+
+
+def handle_move(move):
+    try:
+        move = int(move)
+    except ValueError:
+        return -1
+    if abs(move) <= len(player) and move_num == 1:
+        if move < 0:
+            chosen_domino = player[abs(move) - 1]
+            player.remove(chosen_domino)
+            chosen_domino = str(chosen_domino)
+            domino_snake.insert(0, chosen_domino)
+        elif move > 0:
+            chosen_domino = player[abs(move) - 1]
+            player.remove(chosen_domino)
+            chosen_domino = str(chosen_domino)
+            domino_snake.append(chosen_domino)
+        else:
+            if len(stock) != 0:
+                add_domino = random.choice(stock)
+                player.append(add_domino)
+                stock.remove(add_domino)
+            else:
+                return -1
+    elif abs(move) <= len(computer) and move_num == 0:
+        if move < 0:
+            chosen_domino = computer[abs(move) - 1]
+            computer.remove(chosen_domino)
+            chosen_domino = str(chosen_domino)
+            domino_snake.insert(0, chosen_domino)
+        elif move > 0:
+            chosen_domino = computer[abs(move) - 1]
+            computer.remove(chosen_domino)
+            chosen_domino = str(chosen_domino)
+            domino_snake.append(chosen_domino)
+        else:
+            if len(stock) != 0:
+                add_domino = random.choice(stock)
+                computer.append(add_domino)
+                stock.remove(add_domino)
+            else:
+                return -1
+    else:
+        return -1
+
+
+random.seed()
+move_num, domino_snake = distribute()
+
+if move_num == 0:
+    computer.remove(domino_snake)
 else:
     player.remove(domino_snake)
-    print('Your pieces:')
-    for index, domino in enumerate(player):
-        print(f'{index + 1}:{domino}')
-    print("\nStatus: Computer is about to make a move. Press Enter to continue...")
+
+move_num = (move_num + 1) % 2
+domino_snake = [domino_snake]
+
+while not end_game_condition():
+    if move_num == 1:
+        while handle_move(input()) == -1:
+            print("Invalid input. Please try again.")
+    else:
+        input()
+        handle_move(random.randint(-len(computer), len(computer)))
+    move_num = (move_num + 1) % 2
