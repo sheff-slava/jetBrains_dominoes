@@ -41,8 +41,8 @@ def end_game_condition():
     if len(domino_snake) < 7:
         print(*domino_snake, '\n', sep='')
     else:
-        print(str(domino_snake[0]), str(domino_snake[1]), str(domino_snake[2]), '...',
-              str(domino_snake[-3]), str(domino_snake[-2]), str(domino_snake[-1]), '\n', sep='')
+        print(domino_snake[0], domino_snake[1], domino_snake[2], '...',
+              domino_snake[-3], domino_snake[-2], domino_snake[-1], '\n', sep='')
     print('Your pieces:')
     for index, domino in enumerate(player):
         print(f'{index + 1}:{domino}')
@@ -69,49 +69,76 @@ def end_game_condition():
     return False
 
 
+def legal_move(move):
+    if move == 0:
+        return 0
+    if move_num == 0 and abs(move) <= len(computer):
+        if move < 0 and domino_snake[0][0] in computer[abs(move) - 1]:
+            return 0
+        elif move > 0 and domino_snake[-1][-1] in computer[abs(move) - 1]:
+            return 0
+        else:
+            return -2
+    if move_num == 1 and abs(move) <= len(player):
+        if move < 0 and domino_snake[0][0] in player[abs(move) - 1]:
+            return 0
+        elif move > 0 and domino_snake[-1][-1] in player[abs(move) - 1]:
+            return 0
+        else:
+            return -2
+    return -1
+
+
 def handle_move(move):
     try:
         move = int(move)
     except ValueError:
         return -1
-    if abs(move) <= len(player) and move_num == 1:
-        if move < 0:
-            chosen_domino = player[abs(move) - 1]
-            player.remove(chosen_domino)
-            chosen_domino = str(chosen_domino)
-            domino_snake.insert(0, chosen_domino)
-        elif move > 0:
-            chosen_domino = player[abs(move) - 1]
-            player.remove(chosen_domino)
-            chosen_domino = str(chosen_domino)
-            domino_snake.append(chosen_domino)
-        else:
-            if len(stock) != 0:
-                add_domino = random.choice(stock)
-                player.append(add_domino)
-                stock.remove(add_domino)
+    error_code = legal_move(move)
+    if error_code == 0:
+        if move_num == 0:
+            if move == 0:
+                if len(stock) != 0:
+                    add_domino = random.choice(stock)
+                    computer.append(add_domino)
+                    stock.remove(add_domino)
+                else:
+                    return -3
             else:
-                return -1
-    elif abs(move) <= len(computer) and move_num == 0:
-        if move < 0:
-            chosen_domino = computer[abs(move) - 1]
-            computer.remove(chosen_domino)
-            chosen_domino = str(chosen_domino)
-            domino_snake.insert(0, chosen_domino)
-        elif move > 0:
-            chosen_domino = computer[abs(move) - 1]
-            computer.remove(chosen_domino)
-            chosen_domino = str(chosen_domino)
-            domino_snake.append(chosen_domino)
-        else:
-            if len(stock) != 0:
-                add_domino = random.choice(stock)
-                computer.append(add_domino)
-                stock.remove(add_domino)
+                chosen_domino = computer[abs(move) - 1]
+                if move < 0:
+                    computer.remove(chosen_domino)
+                    if domino_snake[0][0] != chosen_domino[-1]:
+                        chosen_domino = [chosen_domino[1], chosen_domino[0]]
+                    domino_snake.insert(0, chosen_domino)
+                elif move > 0:
+                    computer.remove(chosen_domino)
+                    if domino_snake[-1][-1] != chosen_domino[0]:
+                        chosen_domino = [chosen_domino[1], chosen_domino[0]]
+                    domino_snake.append(chosen_domino)
+
+        elif move_num == 1:
+            if move == 0:
+                if len(stock) != 0:
+                    add_domino = random.choice(stock)
+                    player.append(add_domino)
+                    stock.remove(add_domino)
+                else:
+                    return -3
             else:
-                return -1
+                chosen_domino = player[abs(move) - 1]
+                if move < 0:
+                    player.remove(chosen_domino)
+                    if domino_snake[0][0] != chosen_domino[-1]:
+                        chosen_domino = [chosen_domino[1], chosen_domino[0]]
+                    domino_snake.insert(0, chosen_domino)
+                elif move > 0:
+                    player.remove(chosen_domino)
+                    if domino_snake[-1][-1] != chosen_domino[0]:
+                        chosen_domino = [chosen_domino[1], chosen_domino[0]]
+                    domino_snake.append(chosen_domino)
     else:
-        return -1
+        return error_code
 
 
 random.seed()
@@ -127,9 +154,16 @@ domino_snake = [domino_snake]
 
 while not end_game_condition():
     if move_num == 1:
-        while handle_move(input()) == -1:
-            print("Invalid input. Please try again.")
+        code = handle_move(input())
+        while code == -1 or code == -2:
+            if code == -1:
+                print("Invalid input. Please try again.")
+            elif code == -2:
+                print("Illegal move. Please try again.")
+            code = handle_move(input())
     else:
         input()
-        handle_move(random.randint(-len(computer), len(computer)))
+        code = handle_move(random.randint(-len(computer), len(computer)))
+        while code == -2:
+            code = handle_move(random.randint(-len(computer), len(computer)))
     move_num = (move_num + 1) % 2
